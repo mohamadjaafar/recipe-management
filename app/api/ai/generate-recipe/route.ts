@@ -2,14 +2,15 @@ import { NextResponse } from 'next/server'
 import { anthropic } from '@/lib/anthropic'
 
 export async function POST(req: Request) {
-  const { ingredients, cuisine, dietary, servings, difficulty } = await req.json()
+  try {
+    const { ingredients, cuisine, dietary, servings, difficulty } = await req.json()
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1500,
-    messages: [{
-      role: 'user',
-      content: `Create a recipe using these available ingredients: ${ingredients}.
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
+      messages: [{
+        role: 'user',
+        content: `Create a recipe using these available ingredients: ${ingredients}.
       ${cuisine ? `Cuisine style: ${cuisine}.` : ''}
       ${dietary ? `Dietary requirements: ${dietary}.` : ''}
       ${servings ? `Servings: ${servings}.` : ''}
@@ -30,15 +31,16 @@ export async function POST(req: Request) {
       }
 
       Make it delicious and practical. Only include ingredients from the provided list plus basic pantry staples (salt, pepper, oil, water).`,
-    }],
-  })
+      }],
+    })
 
-  try {
     const text = (message.content[0] as { type: string; text: string }).text
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     const recipe = jsonMatch ? JSON.parse(jsonMatch[0]) : null
     return NextResponse.json({ recipe })
-  } catch {
-    return NextResponse.json({ recipe: null, error: 'Failed to parse recipe' })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    console.error('generate-recipe error:', message)
+    return NextResponse.json({ recipe: null, error: message }, { status: 500 })
   }
 }

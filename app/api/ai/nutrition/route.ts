@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getModel } from '@/lib/gemini'
+import { groq, MODELS } from '@/lib/groq'
 
 export async function POST(req: Request) {
   try {
@@ -10,13 +10,18 @@ export async function POST(req: Request) {
       .map((i: { amount: string; unit: string; name: string }) => `${i.amount} ${i.unit} ${i.name}`.trim())
       .join(', ')
 
-    const model = getModel('gemini-2.0-flash')
-    const prompt = `Estimate the nutritional info per serving for a recipe with ${servings} servings containing: ${ingredientList}.
-      Return ONLY a valid JSON object (no markdown, no code blocks) with these exact keys:
-      {"calories": 350, "protein": "25g", "carbs": "30g", "fat": "10g", "fiber": "5g"}`
+    const completion = await groq.chat.completions.create({
+      model: MODELS.fast,
+      messages: [{
+        role: 'user',
+        content: `Estimate nutrition per serving for a recipe with ${servings} servings: ${ingredientList}.
+Return ONLY this JSON with no markdown: {"calories":350,"protein":"25g","carbs":"30g","fat":"10g","fiber":"5g"}`,
+      }],
+      temperature: 0.1,
+      max_tokens: 150,
+    })
 
-    const result = await model.generateContent(prompt)
-    const text = result.response.text()
+    const text = completion.choices[0]?.message?.content || ''
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     const nutrition = jsonMatch ? JSON.parse(jsonMatch[0]) : null
     return NextResponse.json({ nutrition })

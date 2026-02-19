@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RecipeAI - Smart Recipe Management System
 
-## Getting Started
+An AI-powered recipe management application built with Next.js 14, Supabase, and Claude AI.
 
-First, run the development server:
+## Features
 
+- **Recipe Management** — Full CRUD: add, edit, delete recipes with rich metadata
+- **Status Tagging** — Mark recipes as Favorite, To Try, or Made Before
+- **Smart Search** — Search by title, description, cuisine, ingredients
+- **AI Recipe Generator** — Generate recipes from ingredients you have using Claude AI
+- **AI Ingredient Substitutions** — Get smart substitutions for any ingredient (hover any ingredient)
+- **AI Nutritional Analysis** — Auto-estimate calories, protein, carbs, fat, fiber on save
+- **AI Meal Planner** — Claude generates a weekly meal plan from your saved recipes
+- **Multi-user Support** — Each user has their own private collection with RLS
+- **Recipe Sharing** — Share recipes with specific users or make them public
+- **Community Explorer** — Browse publicly shared recipes
+- **User Profiles** — Manage your profile and view your recipe stats
+
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router) + TypeScript
+- **UI**: Tailwind CSS v4 + Radix UI components
+- **Database & Auth**: Supabase (PostgreSQL + Row Level Security)
+- **AI**: Anthropic Claude API (claude-sonnet-4-6 + claude-haiku-4-5)
+- **Deployment**: Vercel
+
+## Setup
+
+### 1. Install dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure environment
+Create `.env.local`:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+ANTHROPIC_API_KEY=your_anthropic_key
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Set up Supabase database
+Run the SQL in `supabase/schema.sql` via:
+Supabase Dashboard → SQL Editor → New Query → paste & run
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Run development server
+```bash
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000)
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment (Vercel)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Push to GitHub
+2. Import project in Vercel
+3. Add all 4 environment variables in Vercel project settings
+4. Deploy

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { anthropic } from '@/lib/anthropic'
+import { getModel } from '@/lib/gemini'
 
 export async function POST(req: Request) {
   try {
@@ -10,19 +10,13 @@ export async function POST(req: Request) {
       .map((i: { amount: string; unit: string; name: string }) => `${i.amount} ${i.unit} ${i.name}`.trim())
       .join(', ')
 
-    const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 300,
-      messages: [{
-        role: 'user',
-        content: `Estimate the nutritional info per serving for a recipe with ${servings} servings containing: ${ingredientList}.
+    const model = getModel('gemini-2.0-flash')
+    const prompt = `Estimate the nutritional info per serving for a recipe with ${servings} servings containing: ${ingredientList}.
+      Return ONLY a valid JSON object (no markdown, no code blocks) with these exact keys:
+      {"calories": 350, "protein": "25g", "carbs": "30g", "fat": "10g", "fiber": "5g"}`
 
-      Return ONLY a valid JSON object with these exact keys: calories (number), protein (string like "25g"), carbs (string like "30g"), fat (string like "10g"), fiber (string like "5g").
-      No explanation, just the JSON.`,
-      }],
-    })
-
-    const text = (message.content[0] as { type: string; text: string }).text
+    const result = await model.generateContent(prompt)
+    const text = result.response.text()
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     const nutrition = jsonMatch ? JSON.parse(jsonMatch[0]) : null
     return NextResponse.json({ nutrition })

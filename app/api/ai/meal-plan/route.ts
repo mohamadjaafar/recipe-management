@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { anthropic } from '@/lib/anthropic'
+import { getModel } from '@/lib/gemini'
 
 export async function POST(req: Request) {
   try {
@@ -9,29 +9,22 @@ export async function POST(req: Request) {
       `- ${r.title} (${r.cuisine_type || 'various'}, ${r.difficulty || 'any'} difficulty)`
     ).join('\n')
 
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
-      messages: [{
-        role: 'user',
-        content: `Create a ${days}-day meal plan using these recipes:
+    const model = getModel('gemini-2.0-flash')
+    const prompt = `Create a ${days}-day meal plan using these recipes:
 ${recipeList}
 
 ${preferences ? `Preferences/restrictions: ${preferences}` : ''}
 
-Return ONLY a valid JSON object with this structure:
+Return ONLY a valid JSON object (no markdown, no code blocks) with this structure:
 {
-  "Monday": {"breakfast": "recipe or suggestion", "lunch": "recipe name from list", "dinner": "recipe name from list"},
-  "Tuesday": {...},
-  ...
+  "Monday": {"breakfast": "simple suggestion", "lunch": "recipe name from list", "dinner": "recipe name from list"},
+  "Tuesday": {"breakfast": "simple suggestion", "lunch": "recipe name from list", "dinner": "recipe name from list"}
 }
 
-Use the recipe names from the list for lunch and dinner when possible. For breakfast suggest simple options.
-Plan for ${days} days starting Monday. Include variety and balance.`,
-      }],
-    })
+Plan for ${days} days starting Monday. Use recipe names from the list for lunch/dinner. Include variety.`
 
-    const text = (message.content[0] as { type: string; text: string }).text
+    const result = await model.generateContent(prompt)
+    const text = result.response.text()
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     const plan = jsonMatch ? JSON.parse(jsonMatch[0]) : null
     return NextResponse.json({ plan })
